@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Modules & Graph ────────────────────────────────────────
+
+model MathModule {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  author      String
+  color       String        @default("#6366f1")
+  icon        String        @default("book")
+  code        String        @default("")
+  category    String        @default("Pure Mathematics — Algebra")
+  motivation  String        @default("")
+  bibliography String       @default("[]")
+  isMeta      Boolean       @default(false)
+  posX        Float         @default(0)
+  posY        Float         @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  nodes       ConceptNode[]
+  edges       ConceptEdge[]
+  projects    Project[]
+}
+
+model ConceptNode {
+  id          String   @id @default(cuid())
+  moduleId    String
+  code        String   @default("")
+  title       String
+  description String   @default("")
+  nodeType    String   @default("core")
+  isOptional  Boolean  @default(false)
+  status      String   @default("locked")
+  xp          Int      @default(0)
+  posX        Float    @default(0)
+  posY        Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module       MathModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  outEdges     ConceptEdge[]     @relation("EdgeSource")
+  inEdges      ConceptEdge[]     @relation("EdgeTarget")
+  crossFrom    CrossModuleEdge[] @relation("CrossSource")
+  crossTo      CrossModuleEdge[] @relation("CrossTarget")
+  lesson       Lesson?
+  exercises    Exercise[]
+  projectNodes ProjectNode[]
+  userProgress UserProgress[]
+}
+
+model ConceptEdge {
+  id       String @id @default(cuid())
+  moduleId String
+  sourceId String
+  targetId String
+  type     String @default("prerequisite")
+
+  module MathModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  source ConceptNode @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target ConceptNode @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+}
+
+model CrossModuleEdge {
+  id             String @id @default(cuid())
+  sourceModuleId String
+  sourceNodeId   String
+  targetModuleId String
+  targetNodeId   String
+  type           String @default("enrichment")
+  depth          Int    @default(1)
+  label          String @default("")
+  description    String @default("")
+
+  sourceNode ConceptNode @relation("CrossSource", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  targetNode ConceptNode @relation("CrossTarget", fields: [targetNodeId], references: [id], onDelete: Cascade)
+}
+
+model ModuleEdge {
+  id             String @id @default(cuid())
+  sourceModuleId String
+  targetModuleId String
+}
+
+// ─── Content ────────────────────────────────────────────────
+
+model Lesson {
+  id        String   @id @default(cuid())
+  nodeId    String   @unique
+  content   String   @default("")
+  sections  String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  node ConceptNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model Exercise {
+  id         String   @id @default(cuid())
+  nodeId     String
+  title      String
+  type       String   @default("computational")
+  statement  String   @default("")
+  difficulty Int      @default(1)
+  hints      String   @default("[]")
+  solution   String   @default("")
+  answer     String   @default("")
+  choices    String   @default("[]")
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  node     ConceptNode       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  attempts ExerciseAttempt[]
+}
+
+// ─── Projects (X-ENS style) ────────────────────────────────
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  statement   String   @default("")
+  difficulty  Int      @default(4)
+  hints       String   @default("[]")
+  solution    String   @default("")
+  moduleId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module        MathModule?   @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  requiredNodes ProjectNode[]
+}
+
+model ProjectNode {
+  id        String @id @default(cuid())
+  projectId String
+  nodeId    String
+
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  node    ConceptNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, nodeId])
+}
+
+// ─── User & Auth ────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  progress         UserProgress[]
+  exerciseAttempts ExerciseAttempt[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserProgress {
+  id     String @id @default(cuid())
+  userId String
+  nodeId String
+  status String @default("available")
+  xp     Int    @default(0)
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node ConceptNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nodeId])
+}
+
+model ExerciseAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  completed  Boolean  @default(false)
+  hintsUsed  Int      @default(0)
+  score      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+}
