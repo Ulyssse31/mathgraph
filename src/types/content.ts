@@ -15,7 +15,7 @@ export interface LessonSection {
   steps?: string[];
 }
 
-export type ExerciseType = "computational" | "qcm" | "proof";
+export type ExerciseType = "computational" | "qcm" | "proof" | "automatism" | "open_problem" | "numerical" | "abstract" | "true_false" | "fill_blank" | "matching" | "construction";
 
 export interface QCMChoice {
   text: string;

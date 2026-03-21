@@ -54,6 +54,8 @@ model ConceptNode {
   exercises    Exercise[]
   projectNodes ProjectNode[]
   userProgress UserProgress[]
+
+  @@index([moduleId])
 }
 
 model ConceptEdge {
@@ -66,6 +68,10 @@ model ConceptEdge {
   module MathModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   source ConceptNode @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
   target ConceptNode @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+  @@index([sourceId])
+  @@index([targetId])
 }
 
 model CrossModuleEdge {
@@ -81,6 +87,9 @@ model CrossModuleEdge {
 
   sourceNode ConceptNode @relation("CrossSource", fields: [sourceNodeId], references: [id], onDelete: Cascade)
   targetNode ConceptNode @relation("CrossTarget", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
 }
 
 model ModuleEdge {
@@ -100,6 +109,8 @@ model Lesson {
   updatedAt DateTime @updatedAt
 
   node ConceptNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
 }
 
 model Exercise {
@@ -119,6 +130,8 @@ model Exercise {
 
   node     ConceptNode       @relation(fields: [nodeId], references: [id], onDelete: Cascade)
   attempts ExerciseAttempt[]
+
+  @@index([nodeId])
 }
 
 // ─── Projects (X-ENS style) ────────────────────────────────
@@ -215,6 +228,8 @@ model UserProgress {
   node ConceptNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, nodeId])
+  @@index([userId])
+  @@index([nodeId])
 }
 
 model ExerciseAttempt {
@@ -230,4 +245,6 @@ model ExerciseAttempt {
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, exerciseId])
+  @@index([userId])
+  @@index([exerciseId])
 }

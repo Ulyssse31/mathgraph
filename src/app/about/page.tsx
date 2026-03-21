@@ -131,7 +131,7 @@ export default function AboutPage() {
             <span className="w-1 h-6 rounded-full bg-pink-500" />
             Tech Stack
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
               { name: "Next.js", desc: "React framework with App Router" },
               { name: "React Flow", desc: "Interactive graph visualization" },

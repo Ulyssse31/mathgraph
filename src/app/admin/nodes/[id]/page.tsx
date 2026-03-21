@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, use, useRef } from "react";
+import { useEffect, useState, use, useRef, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import MarkdownRenderer from "@/components/content/MarkdownRenderer";
 
 interface LessonSection {
@@ -47,9 +48,16 @@ const sectionTypes = [
   "historique",
 ];
 
-function MediaToolbar({ onInsert }: { onInsert: (text: string) => void }) {
+function MediaToolbar({
+  onInsert,
+  onUploadImage,
+}: {
+  onInsert: (text: string) => void;
+  onUploadImage?: (file: File) => Promise<string | null>;
+}) {
   const [showInput, setShowInput] = useState<string | null>(null);
   const [url, setUrl] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const insert = (type: string) => {
     let text = "";
@@ -60,11 +68,20 @@ function MediaToolbar({ onInsert }: { onInsert: (text: string) => void }) {
       case "video":
         text = `\n::video[${url}]\n`;
         break;
+      case "mp4":
+        text = `\n::mp4[${url}]\n`;
+        break;
       case "desmos":
         text = `\n::desmos[${url}]\n`;
         break;
       case "geogebra":
         text = `\n::geogebra[${url}]\n`;
+        break;
+      case "three":
+        text = `\n::three[${url}]\n`;
+        break;
+      case "iframe":
+        text = `\n::iframe[${url}]\n`;
         break;
       case "link":
         text = `[Link text](${url})`;
@@ -75,44 +92,77 @@ function MediaToolbar({ onInsert }: { onInsert: (text: string) => void }) {
     setShowInput(null);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onUploadImage) return;
+    const uploadedUrl = await onUploadImage(file);
+    if (uploadedUrl) {
+      onInsert(`![${file.name}](${uploadedUrl})`);
+    }
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   const buttons = [
-    { key: "image", label: "Image", icon: "🖼", placeholder: "Image URL..." },
-    { key: "video", label: "Video", icon: "▶", placeholder: "YouTube / Vimeo URL..." },
-    { key: "desmos", label: "Desmos", icon: "📈", placeholder: "Desmos calculator URL or expression..." },
+    { key: "upload", label: "Upload", icon: "📷", placeholder: "" },
+    { key: "image", label: "Image URL", icon: "🖼", placeholder: "Image URL..." },
+    { key: "video", label: "YouTube", icon: "▶", placeholder: "YouTube / Vimeo URL..." },
+    { key: "mp4", label: "MP4", icon: "🎬", placeholder: "MP4 video URL..." },
+    { key: "desmos", label: "Desmos", icon: "📊", placeholder: "Desmos URL or expression (e.g. y=x^2)..." },
     { key: "geogebra", label: "GeoGebra", icon: "📐", placeholder: "GeoGebra material ID..." },
-    { key: "link", label: "Link", icon: "🔗", placeholder: "URL..." },
+    { key: "three", label: "3D", icon: "🧊", placeholder: "3D model URL (.glb/.gltf) or scene URL..." },
+    { key: "iframe", label: "Embed", icon: "🔗", placeholder: "Any URL to embed as iframe..." },
   ];
 
   return (
     <div className="flex flex-wrap items-center gap-1 mb-1">
-      {buttons.map((btn) => (
-        <button
-          key={btn.key}
-          type="button"
-          onClick={() => setShowInput(showInput === btn.key ? null : btn.key)}
-          className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-            showInput === btn.key
-              ? "bg-indigo-600 text-white"
-              : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
-          }`}
-          title={`Insert ${btn.label}`}
-        >
-          {btn.icon} {btn.label}
-        </button>
-      ))}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+      {buttons.map((btn) =>
+        btn.key === "upload" ? (
+          <button
+            key={btn.key}
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="px-2 py-1 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors cursor-pointer"
+            title="Upload image"
+          >
+            {btn.icon} {btn.label}
+          </button>
+        ) : (
+          <button
+            key={btn.key}
+            type="button"
+            onClick={() => setShowInput(showInput === btn.key ? null : btn.key)}
+            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+              showInput === btn.key
+                ? "bg-indigo-600 text-white"
+                : "bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+            }`}
+            title={`Insert ${btn.label}`}
+          >
+            {btn.icon} {btn.label}
+          </button>
+        )
+      )}
       {showInput && (
-        <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-1 w-full mt-1">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={buttons.find((b) => b.key === showInput)?.placeholder}
-            className="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs w-64"
+            className="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs flex-1"
             onKeyDown={(e) => e.key === "Enter" && url && insert(showInput)}
+            autoFocus
           />
           <button
             type="button"
             onClick={() => url && insert(showInput)}
-            className="px-2 py-1 rounded bg-indigo-600 text-white text-xs"
+            className="px-2 py-1 rounded bg-indigo-600 text-white text-xs cursor-pointer"
           >
             Insert
           </button>
@@ -131,7 +181,6 @@ export default function NodeEditorPage({
   const [data, setData] = useState<NodeData | null>(null);
   const [sections, setSections] = useState<LessonSection[]>([]);
   const [saving, setSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [exerciseForm, setExerciseForm] = useState({
     title: "",
@@ -143,6 +192,7 @@ export default function NodeEditorPage({
     answer: "",
   });
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/nodes/${id}/content`)
@@ -155,11 +205,20 @@ export default function NodeEditorPage({
 
   const saveLesson = async () => {
     setSaving(true);
-    await fetch(`/api/nodes/${id}/lesson`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sections }),
-    });
+    try {
+      const res = await fetch(`/api/nodes/${id}/lesson`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sections }),
+      });
+      if (res.ok) {
+        toast.success("Lesson saved");
+      } else {
+        toast.error("Failed to save lesson");
+      }
+    } catch {
+      toast.error("Network error");
+    }
     setSaving(false);
   };
 
@@ -185,7 +244,6 @@ export default function NodeEditorPage({
       const current = sections[idx].content;
       const newContent = current.slice(0, start) + text + current.slice(end);
       updateSection(idx, "content", newContent);
-      // Restore cursor position after React re-render
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + text.length;
         textarea.focus();
@@ -194,6 +252,35 @@ export default function NodeEditorPage({
       updateSection(idx, "content", sections[idx].content + text);
     }
   };
+
+  const uploadImage = useCallback(async (file: File): Promise<string | null> => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+      if (!res.ok) return null;
+      const { url } = await res.json();
+      return url;
+    } catch {
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent, idx: number) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+      const url = await uploadImage(file);
+      if (url) {
+        insertAtCursor(idx, `![${file.name}](${url})`);
+      }
+    },
+    [uploadImage, insertAtCursor]
+  );
 
   const addExercise = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,7 +336,7 @@ export default function NodeEditorPage({
 
   return (
     <div className="min-h-screen bg-zinc-950 p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
           <Link href="/admin" className="hover:text-zinc-300">Admin</Link>
@@ -274,7 +361,10 @@ export default function NodeEditorPage({
                 {data.node.title}
               </h1>
             </div>
-            <p className="text-sm text-zinc-500">Content Editor</p>
+            <p className="text-sm text-zinc-500">
+              Content Editor
+              {uploading && <span className="ml-2 text-amber-400">Uploading...</span>}
+            </p>
           </div>
           <div className="flex gap-3">
             <Link
@@ -300,21 +390,15 @@ export default function NodeEditorPage({
             </h2>
             <div className="flex gap-2">
               <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 text-sm hover:bg-zinc-700"
-              >
-                {showPreview ? "Hide Preview" : "Show Preview"}
-              </button>
-              <button
                 onClick={addSection}
-                className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm"
+                className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm cursor-pointer"
               >
                 + Section
               </button>
               <button
                 onClick={saveLesson}
                 disabled={saving}
-                className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-sm disabled:opacity-50"
+                className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-sm disabled:opacity-50 cursor-pointer"
               >
                 {saving ? "Saving..." : "Save Lesson"}
               </button>
@@ -347,27 +431,35 @@ export default function NodeEditorPage({
                   />
                   <button
                     onClick={() => removeSection(idx)}
-                    className="text-red-500 hover:text-red-400 text-sm"
+                    className="text-red-500 hover:text-red-400 text-sm cursor-pointer"
                   >
                     Remove
                   </button>
                 </div>
                 {/* Media toolbar */}
-                <MediaToolbar onInsert={(text) => insertAtCursor(idx, text)} />
-                <div className={showPreview ? "grid grid-cols-2 gap-4" : ""}>
+                <MediaToolbar
+                  onInsert={(text) => insertAtCursor(idx, text)}
+                  onUploadImage={uploadImage}
+                />
+                {/* Side-by-side editor + live preview */}
+                <div className="grid grid-cols-2 gap-4">
                   <textarea
                     ref={(el) => { textareaRefs.current[idx] = el; }}
                     value={sec.content}
                     onChange={(e) => updateSection(idx, "content", e.target.value)}
-                    rows={8}
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm font-mono"
-                    placeholder="Markdown + LaTeX content... Use toolbar above for media embeds."
+                    rows={12}
+                    className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm font-mono resize-y"
+                    placeholder="Markdown + LaTeX content...&#10;&#10;Embed syntax:&#10;  ![alt](url)         — image&#10;  ::video[youtube-url] — YouTube/Vimeo&#10;  ::mp4[url]           — MP4 video&#10;  ::desmos[y=x^2]      — Desmos graph&#10;  ::geogebra[id]       — GeoGebra&#10;  ::three[url.glb]     — 3D model&#10;  ::iframe[url]        — any embed"
+                    onDrop={(e) => handleDrop(e, idx)}
+                    onDragOver={(e) => e.preventDefault()}
                   />
-                  {showPreview && (
-                    <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-sm overflow-auto max-h-64">
+                  <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-sm overflow-auto max-h-[500px]">
+                    {sec.content ? (
                       <MarkdownRenderer content={sec.content} />
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-zinc-600 italic text-xs">Live preview will appear here...</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -382,7 +474,7 @@ export default function NodeEditorPage({
             </h2>
             <button
               onClick={() => setShowAddExercise(true)}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm"
+              className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm cursor-pointer"
             >
               + Exercise
             </button>
@@ -415,6 +507,14 @@ export default function NodeEditorPage({
                   <option value="computational">Computational</option>
                   <option value="qcm">QCM</option>
                   <option value="proof">Proof</option>
+                  <option value="automatism">Automatism</option>
+                  <option value="open_problem">Open Problem</option>
+                  <option value="numerical">Numerical</option>
+                  <option value="abstract">Abstract</option>
+                  <option value="true_false">True / False</option>
+                  <option value="fill_blank">Fill in the Blank</option>
+                  <option value="matching">Matching</option>
+                  <option value="construction">Construction</option>
                 </select>
               </div>
               <textarea
@@ -445,7 +545,7 @@ export default function NodeEditorPage({
                     className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-200 text-sm"
                   />
                 </div>
-                {exerciseForm.type === "computational" && (
+                {["computational", "automatism", "numerical", "true_false", "fill_blank"].includes(exerciseForm.type) && (
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">
                       Answer
@@ -493,14 +593,14 @@ export default function NodeEditorPage({
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm"
+                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm cursor-pointer"
                 >
                   Create
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddExercise(false)}
-                  className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-400 text-sm"
+                  className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-400 text-sm cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -540,7 +640,7 @@ export default function NodeEditorPage({
                 </div>
                 <button
                   onClick={() => deleteExercise(ex.id)}
-                  className="text-xs text-red-500 hover:text-red-400 ml-3 shrink-0"
+                  className="text-xs text-red-500 hover:text-red-400 ml-3 shrink-0 cursor-pointer"
                 >
                   Delete
                 </button>

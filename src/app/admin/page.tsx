@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { MathModule, ConceptNode } from "@/types/graph";
 
 interface ModuleWithNodes extends MathModule {
@@ -73,6 +74,10 @@ export default function AdminPage() {
       setModules((prev) => [...prev, { ...module, _count: { nodes: 0 }, nodes: [] }]);
       setShowCreate(false);
       setForm({ title: "", description: "", author: "", color: "#6366f1" });
+      toast.success("Module created successfully");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || "Failed to create module");
     }
   };
 
@@ -152,7 +157,7 @@ export default function AdminPage() {
             className="mb-6 p-6 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4"
           >
             <h2 className="text-lg font-semibold text-zinc-200">Create New Module</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-zinc-500 mb-1">Title</label>
                 <input
@@ -236,7 +241,9 @@ export default function AdminPage() {
                         <div className="flex items-center p-4">
                           <button
                             onClick={() => toggleExpanded(m.id)}
-                            className="mr-3 text-zinc-600 hover:text-zinc-400 text-xs"
+                            className="mr-3 text-zinc-600 hover:text-zinc-400 text-xs cursor-pointer"
+                            aria-expanded={expandedModules.has(m.id)}
+                            aria-label={`${expandedModules.has(m.id) ? "Collapse" : "Expand"} ${m.title}`}
                           >
                             {expandedModules.has(m.id) ? "▼" : "▶"}
                           </button>
@@ -271,7 +278,7 @@ export default function AdminPage() {
                         {/* Expanded chapter list */}
                         {expandedModules.has(m.id) && m.nodes && m.nodes.length > 0 && (
                           <div className="border-t border-zinc-800 px-4 py-3">
-                            <div className="grid grid-cols-2 gap-1.5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                               {m.nodes.map((n) => (
                                 <Link
                                   key={n.id}

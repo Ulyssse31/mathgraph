@@ -2,8 +2,26 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { NextResponse } from "next/server";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
+
+/** Check auth and return session, or null if not authenticated */
+export async function requireAuth() {
+  const session = await auth();
+  return session?.user?.id ? session : null;
+}
+
+/** Return a 401 JSON response */
+export function unauthorized() {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+/** Return a 500 JSON response, logging the error */
+export function serverError(err: unknown) {
+  console.error("[API Error]", err);
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),

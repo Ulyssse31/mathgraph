@@ -22,10 +22,10 @@ const statusStyles: Record<
   { border: string; bg: string; glow: string; opacity: string }
 > = {
   locked: {
-    border: "border-zinc-700",
+    border: "border-zinc-600",
     bg: "bg-zinc-900",
     glow: "",
-    opacity: "opacity-40",
+    opacity: "",
   },
   available: {
     border: "border-indigo-500",
@@ -54,7 +54,7 @@ const statusStyles: Record<
 };
 
 const statusIcons: Record<NodeStatus, string> = {
-  locked: "\u{1F512}",
+  locked: "",
   available: "",
   in_progress: "",
   practiced: "\u2713",

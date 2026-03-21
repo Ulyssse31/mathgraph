@@ -9,23 +9,37 @@ interface ModuleGraphProps {
   onModuleClick: (moduleId: string) => void;
 }
 
-// Defines the display order of categories
-const CATEGORY_ORDER = [
-  "Pure Mathematics — Algebra",
-  "Pure Mathematics — Calculus and Analysis",
-  "Pure Mathematics — Geometry and Topology",
-  "Pure Mathematics — Combinatorics",
-  "Pure Mathematics — Logic",
-  "Pure Mathematics — Number Theory",
-  "Applied Mathematics — Dynamical Systems and Differential Equations",
-  "Applied Mathematics — Mathematical Physics",
-  "Applied Mathematics — Theory of Computation",
-  "Applied Mathematics — Information Theory and Signal Processing",
-  "Applied Mathematics — Probability and Statistics",
-  "Applied Mathematics — Game Theory",
-  "Applied Mathematics — Operations Research",
-  "Meta-Skills",
+// MSC 2020 section order and styling
+const SECTIONS: {
+  category: string;
+  label: string;
+  color: string;
+  colorBg: string;
+}[] = [
+  { category: "Foundations & Logic", label: "Foundations & Logic", color: "text-purple-400/70", colorBg: "bg-purple-400/10" },
+  { category: "Algebra", label: "Algebra", color: "text-indigo-400/70", colorBg: "bg-indigo-400/10" },
+  { category: "Analysis", label: "Analysis", color: "text-blue-400/70", colorBg: "bg-blue-400/10" },
+  { category: "Geometry & Topology", label: "Geometry & Topology", color: "text-emerald-400/70", colorBg: "bg-emerald-400/10" },
+  { category: "Applied Math & Computation", label: "Applied Math & Computation", color: "text-cyan-400/70", colorBg: "bg-cyan-400/10" },
+  { category: "Probability, Statistics & Decision Sciences", label: "Probability, Statistics & Decision Sciences", color: "text-green-400/70", colorBg: "bg-green-400/10" },
+  { category: "Mathematical Physics", label: "Mathematical Physics", color: "text-rose-400/70", colorBg: "bg-rose-400/10" },
+  { category: "History & Culture", label: "History & Culture", color: "text-amber-400/70", colorBg: "bg-amber-400/10" },
 ];
+
+const ICON_SYMBOLS: Record<string, string> = {
+  function:  "∫",
+  grid:      "⊕",
+  infinity:  "∞",
+  circle:    "∮",
+  star:      "★",
+  layers:    "⊗",
+  compass:   "△",
+  cpu:       "⊢",
+  chart:     "∑",
+  network:   "⟳",
+  book:      "α",
+  lightbulb: "λ",
+};
 
 function ModuleCard({
   module,
@@ -35,76 +49,77 @@ function ModuleCard({
   onClick: () => void;
 }) {
   const count = module._count?.nodes ?? 0;
+  const symbol = ICON_SYMBOLS[module.icon] ?? "∂";
 
   return (
     <button
       onClick={onClick}
-      className="group relative text-left w-full rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 transition-all duration-200 hover:bg-zinc-900 hover:border-zinc-700 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
-      style={{
-        borderLeftWidth: "4px",
-        borderLeftColor: module.color,
-      }}
+      className="group text-left w-full rounded-xl border border-zinc-800 bg-zinc-900/60 overflow-hidden transition-all duration-200 hover:border-zinc-600 hover:scale-[1.02] hover:shadow-xl cursor-pointer"
     >
-      {/* Color glow on hover */}
+      {/* Cover area */}
       <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        className="relative h-28 flex items-center justify-center overflow-hidden"
         style={{
-          background: `radial-gradient(ellipse at left, ${module.color}08, transparent 70%)`,
+          background: `linear-gradient(135deg, ${module.color}35 0%, ${module.color}10 100%)`,
         }}
-      />
+      >
+        {/* Dot-grid texture */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern id={`dots-${module.id}`} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1" fill={module.color} />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill={`url(#dots-${module.id})`} />
+        </svg>
 
-      <div className="relative">
-        {/* Header: code badge + title */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {module.code && (
-              <span
-                className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                style={{
-                  backgroundColor: `${module.color}20`,
-                  color: module.color,
-                }}
-              >
-                {module.code}
-              </span>
-            )}
-            <h3
-              className="text-base font-bold leading-tight"
-              style={{ color: module.color }}
-            >
-              {module.title}
-            </h3>
-          </div>
+        {/* Large math symbol */}
+        <span
+          className="text-5xl font-light select-none opacity-60 group-hover:opacity-80 transition-opacity"
+          style={{ color: module.color }}
+        >
+          {symbol}
+        </span>
+
+        {/* Chapter count badge — top right */}
+        <span className="absolute top-3 right-3 text-[10px] font-mono text-zinc-400 bg-black/30 px-1.5 py-0.5 rounded">
+          {count} chapters
+        </span>
+
+        {/* Code badge — top left */}
+        {module.code && (
           <span
-            className="text-xs font-mono px-2 py-1 rounded-md shrink-0 ml-2"
+            className="absolute top-3 left-3 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
             style={{
-              backgroundColor: `${module.color}15`,
+              backgroundColor: `${module.color}20`,
               color: module.color,
+              border: `1px solid ${module.color}30`,
             }}
           >
-            {count}
+            {module.code}
           </span>
-        </div>
+        )}
+      </div>
 
-        {/* Author */}
-        <p className="text-xs text-zinc-500 mb-2">
-          par {module.author}
-        </p>
-
-        {/* Description */}
+      {/* Info area */}
+      <div className="p-4">
+        <h3 className="text-base font-bold text-zinc-100 leading-tight mb-1">
+          {module.title}
+        </h3>
+        <p className="text-xs text-zinc-500 mb-2">par {module.author}</p>
         <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2 mb-3">
           {module.description}
         </p>
 
-        {/* Progress bar (placeholder — 0% for now) */}
+        {/* Progress bar */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: "0%",
-                backgroundColor: module.color,
-              }}
+              style={{ width: "0%", backgroundColor: module.color }}
             />
           </div>
           <span className="text-[10px] text-zinc-600">0%</span>
@@ -121,7 +136,7 @@ export default function ModuleGraph({
 }: ModuleGraphProps) {
   const [search, setSearch] = useState("");
 
-  // Group modules by category, preserving defined order
+  // Group modules by MSC section
   const grouped = useMemo(() => {
     const filtered = search.trim()
       ? modules.filter((m) => {
@@ -142,31 +157,15 @@ export default function ModuleGraph({
       map.get(cat)!.push(m);
     }
 
-    // Sort by defined order
-    const ordered: { category: string; modules: typeof modules }[] = [];
-    for (const cat of CATEGORY_ORDER) {
-      const mods = map.get(cat);
-      if (mods && mods.length > 0) {
-        ordered.push({ category: cat, modules: mods });
-        map.delete(cat);
-      }
-    }
-    // Any remaining categories not in CATEGORY_ORDER
-    for (const [cat, mods] of map) {
-      if (mods.length > 0) {
-        ordered.push({ category: cat, modules: mods });
-      }
-    }
-
-    return ordered;
+    return SECTIONS.filter((s) => map.has(s.category) && map.get(s.category)!.length > 0).map(
+      (s) => ({
+        ...s,
+        modules: map.get(s.category)!,
+      })
+    );
   }, [modules, search]);
 
   const totalFiltered = grouped.reduce((s, g) => s + g.modules.length, 0);
-
-  // Extract top-level grouping (Pure / Applied / Meta)
-  const pureGroups = grouped.filter((g) => g.category.startsWith("Pure Mathematics"));
-  const appliedGroups = grouped.filter((g) => g.category.startsWith("Applied Mathematics"));
-  const metaGroups = grouped.filter((g) => !g.category.startsWith("Pure") && !g.category.startsWith("Applied"));
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -208,90 +207,25 @@ export default function ModuleGraph({
           </div>
         </div>
 
-        {/* Pure Mathematics */}
-        {pureGroups.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-400/70 mb-6 flex items-center gap-2">
-              <span className="h-px flex-1 bg-indigo-400/10" />
-              Pure Mathematics
-              <span className="h-px flex-1 bg-indigo-400/10" />
+        {/* MSC Sections */}
+        {grouped.map((section) => (
+          <div key={section.category} className="mb-12">
+            <h2 className={`text-sm font-bold uppercase tracking-wider ${section.color} mb-6 flex items-center gap-2`}>
+              <span className={`h-px flex-1 ${section.colorBg}`} />
+              {section.label}
+              <span className={`h-px flex-1 ${section.colorBg}`} />
             </h2>
-            {pureGroups.map((group) => {
-              // Extract subcategory name (after " — ")
-              const subcat = group.category.replace("Pure Mathematics — ", "");
-              return (
-                <section key={group.category} className="mb-8">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3 ml-1">
-                    {subcat}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {group.modules.map((m) => (
-                      <ModuleCard
-                        key={m.id}
-                        module={m}
-                        onClick={() => onModuleClick(m.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {section.modules.map((m) => (
+                <ModuleCard
+                  key={m.id}
+                  module={m}
+                  onClick={() => onModuleClick(m.id)}
+                />
+              ))}
+            </div>
           </div>
-        )}
-
-        {/* Applied Mathematics */}
-        {appliedGroups.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-amber-400/70 mb-6 flex items-center gap-2">
-              <span className="h-px flex-1 bg-amber-400/10" />
-              Applied Mathematics
-              <span className="h-px flex-1 bg-amber-400/10" />
-            </h2>
-            {appliedGroups.map((group) => {
-              const subcat = group.category.replace("Applied Mathematics — ", "");
-              return (
-                <section key={group.category} className="mb-8">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3 ml-1">
-                    {subcat}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {group.modules.map((m) => (
-                      <ModuleCard
-                        key={m.id}
-                        module={m}
-                        onClick={() => onModuleClick(m.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Meta-Skills */}
-        {metaGroups.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-teal-400/70 mb-6 flex items-center gap-2">
-              <span className="h-px flex-1 bg-teal-400/10" />
-              Meta-Skills
-              <span className="h-px flex-1 bg-teal-400/10" />
-            </h2>
-            {metaGroups.map((group) => (
-              <section key={group.category} className="mb-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {group.modules.map((m) => (
-                    <ModuleCard
-                      key={m.id}
-                      module={m}
-                      onClick={() => onModuleClick(m.id)}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
+        ))}
 
         {/* Empty state */}
         {totalFiltered === 0 && (

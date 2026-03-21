@@ -1,7 +1,25 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@variant dark (&:where(.dark, .dark *));
+
+/* Light theme (default) — warm off-white */
 :root {
+  --background: #fafaf9;
+  --foreground: #1c1c1e;
+  --card: #f1f0ee;
+  --card-border: #e4e3e0;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --section-bg: rgba(0, 0, 0, 0.02);
+  --section-border: rgba(0, 0, 0, 0.08);
+}
+
+/* Dark theme */
+.dark {
   --background: #0a0a0f;
   --foreground: #e4e4e7;
   --card: #18181b;
@@ -11,6 +29,8 @@
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+  --section-bg: rgba(255, 255, 255, 0.02);
+  --section-border: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
@@ -30,6 +50,32 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+
+/* Reading progress bar */
+.reading-progress {
+  position: fixed;
+  top: 56px; /* below header */
+  left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 60;
+  transition: width 0.1s linear;
+}
+
+/* Prose typography refinements */
+.prose-lesson {
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+
+.prose-lesson p {
+  margin-bottom: 1.25em;
+}
+
+.prose-lesson h3 {
+  margin-top: 2em;
 }
 
 /* React Flow overrides */
@@ -56,10 +102,10 @@ body {
 }
 
 .react-flow__controls-button:hover {
-  background: #27272a !important;
+  background: var(--card-border) !important;
 }
 
-/* KaTeX overrides for dark theme */
+/* KaTeX overrides */
 .katex {
   color: inherit !important;
 }

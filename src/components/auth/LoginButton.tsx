@@ -18,7 +18,7 @@ export default function LoginButton() {
         {session.user.image && (
           <img
             src={session.user.image}
-            alt=""
+            alt={session.user.name || "User avatar"}
             className="w-7 h-7 rounded-full border border-zinc-700"
           />
         )}

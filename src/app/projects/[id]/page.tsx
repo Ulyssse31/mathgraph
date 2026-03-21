@@ -54,8 +54,28 @@ export default function ProjectPage({
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-zinc-500">Project not found.</div>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">:(</div>
+          <h1 className="text-xl font-bold text-zinc-100">Project not found</h1>
+          <p className="text-sm text-zinc-400">
+            This project doesn&apos;t exist or has been removed.
+          </p>
+          <div className="flex gap-3 justify-center pt-2">
+            <Link
+              href="/projects"
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors"
+            >
+              All projects
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm font-medium hover:bg-zinc-700 transition-colors"
+            >
+              Home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

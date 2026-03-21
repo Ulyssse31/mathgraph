@@ -68,7 +68,7 @@ export default function ConceptTooltip({
     mounted && visible
       ? createPortal(
           <div
-            className="z-50 w-80 p-3 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl"
+            className="z-50 w-80 p-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl"
             style={{
               position: "absolute",
               top: pos.top,
@@ -81,10 +81,10 @@ export default function ConceptTooltip({
             <div className="text-xs font-bold text-blue-400 mb-1">
               {entry.term}
             </div>
-            <div className="text-xs text-zinc-300 leading-relaxed prose prose-invert prose-sm max-w-none">
+            <div className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed prose dark:prose-invert prose-sm max-w-none">
               <InlineDefinition content={entry.definition} />
             </div>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-zinc-700" />
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-zinc-200 dark:border-t-zinc-700" />
           </div>,
           document.body
         )

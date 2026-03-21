@@ -17,6 +17,7 @@ import MathNodeComponent from "./MathNode";
 import MathEdgeComponent from "./MathEdge";
 import PortalNodeComponent from "./PortalNode";
 import NodePanel from "./NodePanel";
+import ModuleOverview from "./ModuleOverview";
 import { getLayoutedElements } from "@/lib/layout";
 import type {
   ConceptNode,
@@ -29,6 +30,10 @@ interface ConceptGraphProps {
   moduleId: string;
   moduleColor: string;
   moduleTitle: string;
+  moduleDescription?: string;
+  moduleCode?: string;
+  moduleMotivation?: string;
+  moduleBibliography?: string;
   conceptNodes: ConceptNode[];
   conceptEdges: ConceptEdge[];
   crossEdges: CrossEdgeWithNodes[];
@@ -49,6 +54,10 @@ export default function ConceptGraph({
   moduleId,
   moduleColor,
   moduleTitle,
+  moduleDescription = "",
+  moduleCode = "",
+  moduleMotivation = "",
+  moduleBibliography = "[]",
   conceptNodes: initialConceptNodes,
   conceptEdges,
   crossEdges,
@@ -187,36 +196,10 @@ export default function ConceptGraph({
           if (n.id === nodeId) {
             const ns = nextStatus[n.status];
             if (!ns) return n;
-            return { ...n, status: ns, xp: n.xp + 10 };
+            return { ...n, status: ns };
           }
           return n;
         });
-
-        const completedNode = updated.find((n) => n.id === nodeId);
-        if (completedNode && completedNode.status !== "available") {
-          const dependentEdges = conceptEdges.filter(
-            (e) => e.sourceId === nodeId
-          );
-          for (const edge of dependentEdges) {
-            const targetPrereqs = conceptEdges.filter(
-              (e) => e.targetId === edge.targetId
-            );
-            const allMet = targetPrereqs.every((pre) => {
-              const preNode = updated.find((n) => n.id === pre.sourceId);
-              return (
-                preNode &&
-                preNode.status !== "locked" &&
-                preNode.status !== "available"
-              );
-            });
-            if (allMet) {
-              const idx = updated.findIndex((n) => n.id === edge.targetId);
-              if (idx !== -1 && updated[idx].status === "locked") {
-                updated[idx] = { ...updated[idx], status: "available" };
-              }
-            }
-          }
-        }
 
         return updated;
       });
@@ -224,7 +207,7 @@ export default function ConceptGraph({
       setSelectedNode((prev) => {
         if (!prev || prev.id !== nodeId) return prev;
         const ns = nextStatus[prev.status];
-        return ns ? { ...prev, status: ns, xp: prev.xp + 10 } : prev;
+        return ns ? { ...prev, status: ns } : prev;
       });
 
       fetch(`/api/nodes/${nodeId}/status`, {
@@ -258,6 +241,15 @@ export default function ConceptGraph({
         </h1>
       </div>
 
+      <ModuleOverview
+        title={moduleTitle}
+        code={moduleCode}
+        description={moduleDescription}
+        motivation={moduleMotivation}
+        bibliography={moduleBibliography}
+        color={moduleColor}
+      />
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -271,6 +263,7 @@ export default function ConceptGraph({
         minZoom={0.3}
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
+        style={{ backgroundColor: "#09090b" }}
       >
         <Background
           variant={BackgroundVariant.Dots}

@@ -99,12 +99,6 @@ export default function Home() {
             >
               About
             </a>
-            <a
-              href="/admin"
-              className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-            >
-              Admin
-            </a>
           </div>
         </header>
         <main className="flex-1 overflow-hidden">
@@ -148,12 +142,6 @@ export default function Home() {
           >
             Projects
           </a>
-          <a
-            href="/admin"
-            className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
-          >
-            Admin
-          </a>
         </div>
       </header>
 
@@ -162,6 +150,10 @@ export default function Home() {
           moduleId={activeModule.module.id}
           moduleColor={activeModule.module.color}
           moduleTitle={activeModule.module.title}
+          moduleDescription={activeModule.module.description}
+          moduleCode={activeModule.module.code}
+          moduleMotivation={activeModule.module.motivation}
+          moduleBibliography={activeModule.module.bibliography}
           conceptNodes={activeModule.nodes}
           conceptEdges={activeModule.edges}
           crossEdges={activeModule.crossEdges}

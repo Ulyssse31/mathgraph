@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { MathModule, ConceptNode, ConceptEdge } from "@/types/graph";
 
 interface BibEntry {
@@ -57,14 +58,23 @@ export default function ModuleEditorPage({
 
   const saveMeta = async () => {
     setSavingMeta(true);
-    await fetch(`/api/modules/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        motivation,
-        bibliography: JSON.stringify(bibliography),
-      }),
-    });
+    try {
+      const res = await fetch(`/api/modules/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          motivation,
+          bibliography: JSON.stringify(bibliography),
+        }),
+      });
+      if (res.ok) {
+        toast.success("Metadata saved");
+      } else {
+        toast.error("Failed to save metadata");
+      }
+    } catch {
+      toast.error("Network error");
+    }
     setSavingMeta(false);
   };
 
@@ -96,6 +106,10 @@ export default function ModuleEditorPage({
       );
       setShowAddNode(false);
       setNodeForm({ title: "", description: "", status: "locked", posX: 0, posY: 0 });
+      toast.success("Concept created");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error || "Failed to create concept");
     }
   };
 
@@ -113,6 +127,9 @@ export default function ModuleEditorPage({
       );
       setShowAddEdge(false);
       setEdgeForm({ sourceId: "", targetId: "", type: "prerequisite" });
+      toast.success("Edge created");
+    } else {
+      toast.error("Failed to create edge");
     }
   };
 
@@ -124,6 +141,9 @@ export default function ModuleEditorPage({
           ? { ...prev, edges: prev.edges.filter((e) => e.id !== edgeId) }
           : prev
       );
+      toast.success("Edge deleted");
+    } else {
+      toast.error("Failed to delete edge");
     }
   };
 

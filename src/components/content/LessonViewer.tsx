@@ -21,6 +21,8 @@ export default function LessonViewer({ sections }: LessonViewerProps) {
       {sections.map((section, i) => (
         <SectionBlock
           key={i}
+          id={`section-${i}`}
+          sectionIndex={i}
           type={section.type}
           title={section.title}
           content={section.content}
