@@ -105,6 +105,9 @@ model Lesson {
   nodeId    String   @unique
   content   String   @default("")
   sections  String   @default("[]")
+  metadata  String   @default("{}")
+  version   Int      @default(1)
+  status    String   @default("draft")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

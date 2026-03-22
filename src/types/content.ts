@@ -5,7 +5,21 @@ export type SectionType =
   | "proof"
   | "example"
   | "remark"
-  | "historique";
+  | "historique"
+  | "problem"
+  | "intuition"
+  | "warning"
+  | "approfondissement"
+  | "application"
+  | "exercise-inline"
+  | "recap"
+  | "prerequisites";
+
+export interface InlineExercise {
+  statement: string;
+  hint?: string;
+  solution: string;
+}
 
 export interface LessonSection {
   type: SectionType;
@@ -13,6 +27,9 @@ export interface LessonSection {
   content: string;
   commentary?: string;
   steps?: string[];
+  starred?: boolean;
+  collapsed?: boolean;
+  exercise?: InlineExercise;
 }
 
 export type ExerciseType = "computational" | "qcm" | "proof" | "automatism" | "open_problem" | "numerical" | "abstract" | "true_false" | "fill_blank" | "matching" | "construction";

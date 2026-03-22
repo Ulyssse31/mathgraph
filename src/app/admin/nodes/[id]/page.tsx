@@ -40,11 +40,19 @@ interface NodeData {
 
 const sectionTypes = [
   "motivation",
+  "problem",
+  "intuition",
   "definition",
   "theorem",
   "proof",
   "example",
   "remark",
+  "warning",
+  "approfondissement",
+  "application",
+  "exercise-inline",
+  "recap",
+  "prerequisites",
   "historique",
 ];
 

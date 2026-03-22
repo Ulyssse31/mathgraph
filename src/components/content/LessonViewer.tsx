@@ -28,6 +28,9 @@ export default function LessonViewer({ sections }: LessonViewerProps) {
           content={section.content}
           commentary={section.commentary}
           steps={section.steps}
+          starred={section.starred}
+          collapsed={section.collapsed}
+          exercise={section.exercise}
         />
       ))}
     </div>
